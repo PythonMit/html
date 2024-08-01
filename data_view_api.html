@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .action-icons {
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            animation: slide-in 0.4s;
+        }
+
+        @keyframes slide-in {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal h2 {
+            margin-top: 0;
+        }
+
+        .modal form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .modal form div {
+            flex: 1 1 100%;
+        }
+
+        .modal form div label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .modal form div input, 
+        .modal form div button {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .modal form div input {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal form div button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .modal form div button:hover {
+            background-color: #45a049;
+        }
+
+        .modal form div:nth-child(even) {
+            flex: 1 1 48%;
+        }
+
+        @media (max-width: 600px) {
+            .modal form div {
+                flex: 1 1 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+  
+ 
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Employee</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div>
+                    <label for="editFirstName">First Name:</label>
+                    <input type="text" id="editFirstName" required>
+                </div>
+                <div>
+                    <label for="editLastName">Last Name:</label>
+                    <input type="text" id="editLastName" required>
+                </div>
+                <div>
+                    <label for="editAddress">Address:</label>
+                    <input type="text" id="editAddress" required>
+                </div>
+                <div>
+                    <label for="editDOJ">Date of Joining:</label>
+                    <input type="date" id="editDOJ" required>
+                </div>
+                <div>
+                    <label for="editDOB">Date of Birth:</label>
+                    <input type="date" id="editDOB" required>
+                </div>
+                <div>
+                    <label for="editSalary">Salary:</label>
+                    <input type="number" id="editSalary" required>
+                </div>
+                <div>
+                    <label for="editEmail">Email:</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div>
+                    <label for="editPhoneNumber">Phone Number:</label>
+                    <input type="text" id="editPhoneNumber" required>
+                </div>
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+
+
+    <h1>Employee List</h1>
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>FirstName</th>
+                <th>LastPosition</th>
+                <th>Address</th>
+                <th>DoJ</th>
+                <th>DoB</th>
+                <th>Salary</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+<script>
+    var employeeData;
+    document.addEventListener("DOMContentLoaded", function() {
+    fetch('https://localhost:7165/api/get-all-employee')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector("#employeeTable tbody");
+            data.forEach(employee => {
+                const row = document.createElement("tr");
+
+                const idCell = document.createElement("td");
+                idCell.textContent = employee.id;
+                row.appendChild(idCell);
+
+                const firstNameCell = document.createElement("td");
+                firstNameCell.textContent = employee.firstName;
+                row.appendChild(firstNameCell);
+
+                const lastNameCell = document.createElement("td");
+                lastNameCell.textContent = employee.lastName;
+                row.appendChild(lastNameCell);
+
+                const addressCell = document.createElement("td");
+                addressCell.textContent = employee.address;
+                row.appendChild(addressCell);
+
+                const DOJCell = document.createElement("td");
+                DOJCell.textContent =formatDate(employee.doj);
+                row.appendChild(DOJCell);
+
+                const DOBCell = document.createElement("td");
+                DOBCell.textContent =formatDate(employee.dob);
+                row.appendChild(DOBCell);
+
+                const SalaryCell = document.createElement("td");
+                SalaryCell.textContent = employee.salary;
+                row.appendChild(SalaryCell);
+
+                const EmailCell = document.createElement("td");
+                EmailCell.textContent = employee.email;
+                row.appendChild(EmailCell);
+         
+                const PhoneNumberCell = document.createElement("td");
+                PhoneNumberCell.textContent = employee.phoneNumber;
+                row.appendChild(PhoneNumberCell);
+
+                const actionsCell = document.createElement("td");
+                        const editIcon = document.createElement("i");
+                        editIcon.className = "fas fa-edit action-icons";
+                        editIcon.id="editRecord"+employee.id;
+                        // editIcon.setAttribute="data-bs-toggle","modal";
+                        // editIcon.setAttribute="data-bs-target","editPop-up";
+                        editIcon.addEventListener("click", () => openEditModal(employee));
+                        const deleteIcon = document.createElement("i");
+                        deleteIcon.className = "fas fa-trash action-icons";
+                        deleteIcon.addEventListener("click", () => deleteEmployee(employee.id));
+                        actionsCell.appendChild(editIcon);
+                        actionsCell.appendChild(deleteIcon);
+                        row.appendChild(actionsCell);
+
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+        function editEmployee(id) {
+            alert(`Edit employee with ID: ${id}`);
+            // Implement your edit functionality here
+        }
+        function deleteEmployee(id) {
+            if (confirm(`Are you sure you want to delete employee with ID: ${id}?`)) {
+                alert(`Deleted employee with ID: ${id}`);
+                // Implement your delete functionality here
+            }
+        }
+        function openEditModal(employee) {
+            const modal = document.getElementById("editModal");
+            modal.style.display = "block";
+
+            document.getElementById("editId").value = employee.id;
+            document.getElementById("editFirstName").value = employee.firstName;
+            document.getElementById("editLastName").value = employee.lastName;
+            document.getElementById("editAddress").value = employee.address;
+            document.getElementById("editDOJ").value = new Date(employee.doj).toISOString().split('T')[0];
+            document.getElementById("editDOB").value = new Date(employee.dob).toISOString().split('T')[0];
+            document.getElementById("editSalary").value = employee.salary;
+            document.getElementById("editEmail").value = employee.email;
+            document.getElementById("editPhoneNumber").value = employee.phoneNumber;
+        }
+        function closeEditModal() {
+            const modal = document.getElementById("editModal");
+            modal.style.display = "none";
+        }
+
+        document.querySelector(".close").addEventListener("click", closeEditModal);
+        window.addEventListener("click", event => {
+            const modal = document.getElementById("editModal");
+            if (event.target == modal) {
+                closeEditModal();
+            }
+        });
+        document.getElementById("editForm").addEventListener("submit", function(event) {
+            debugger
+            event.preventDefault();
+            updateEmployee();
+        });
+
+        function updateEmployee() {
+            const id = document.getElementById("editId").value;
+             employeeData = {
+                id: id,
+                firstName: document.getElementById("editFirstName").value,
+                lastName: document.getElementById("editLastName").value,
+                address: document.getElementById("editAddress").value,
+                doj: document.getElementById("editDOJ").value,
+                dob: document.getElementById("editDOB").value,
+                salary: document.getElementById("editSalary").value,
+                email: document.getElementById("editEmail").value,
+                phoneNumber: document.getElementById("editPhoneNumber").value
+            };
+        
+        fetch(`https://localhost:7165/api/update-employee`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(employeeData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    alert('Employee updated successfully!');
+                    location.reload(); // Reload the page to see the updated data
+                } else {
+                    alert('Failed to update employee!');
+                }
+            })
+            .catch(error => console.error('Error updating employee:', error));
+        
+        }
+});
+</script>
+
+</body>
+</html>
